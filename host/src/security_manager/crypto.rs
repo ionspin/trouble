@@ -8,7 +8,9 @@ use aes::Aes128;
 use bt_hci::param::BdAddr;
 use cmac::digest;
 use p256::ecdh;
-use rand_core::{CryptoRng, RngCore};
+use p256::elliptic_curve::Generate;
+use p256::elliptic_curve::sec1::{FromSec1Point, ToSec1Point};
+use rand_core::{CryptoRng, Rng, RngCore};
 
 use crate::Address;
 
@@ -372,15 +374,15 @@ impl SecretKey {
     /// Generates a new random secret key.
     #[allow(clippy::new_without_default)]
     #[inline(always)]
-    pub fn new<T: RngCore + CryptoRng>(rng: &mut T) -> Self {
-        Self(p256::NonZeroScalar::random(rng))
+    pub fn new<T: Rng + CryptoRng>(rng: &mut T) -> Self {
+        Self(p256::NonZeroScalar::generate_from_rng(rng))
     }
 
     /// Computes the associated public key.
     pub fn public_key(&self) -> PublicKey {
         use p256::elliptic_curve::sec1::Coordinates::Uncompressed;
         use p256::elliptic_curve::sec1::ToEncodedPoint;
-        let p = p256::PublicKey::from_secret_scalar(&self.0).to_encoded_point(false);
+        let p = p256::PublicKey::from_secret_scalar(&self.0).to_sec1_point(false);
         match p.coordinates() {
             Uncompressed { x, y } => PublicKey {
                 x: PublicKeyX(Coord(*x.as_ref())),
@@ -401,11 +403,11 @@ impl SecretKey {
         }
 
         let (x, y) = (&pk.x.0 .0.into(), &pk.y.0.into());
-        let rep = p256::EncodedPoint::from_affine_coordinates(x, y, false);
+        let rep = p256::Sec1Point::from_affine_coordinates(x, y, false);
         let lpk = p256::PublicKey::from_secret_scalar(&self.0);
         // Constant-time ops not required:
         // https://github.com/RustCrypto/traits/issues/1227
-        let rpk = Option::from(p256::PublicKey::from_encoded_point(&rep)).unwrap_or(lpk);
+        let rpk = Option::from(p256::PublicKey::from_sec1_point(&rep)).unwrap_or(lpk);
         (rpk != lpk).then(|| DHKey(ecdh::diffie_hellman(&self.0, rpk.as_affine())))
     }
 }
@@ -637,7 +639,7 @@ pub(super) fn u256<T: From<[u8; 32]>>(hi: u128, lo: u128) -> T {
 #[allow(clippy::unusual_byte_groupings)]
 #[cfg(test)]
 mod tests {
-    use p256::elliptic_curve::rand_core::OsRng;
+    use rand::rng;
 
     use super::*;
     extern crate std;
@@ -797,10 +799,10 @@ mod tests {
 
     #[test]
     fn testtest() {
-        let skb = SecretKey::new(&mut OsRng::default());
+        let skb = SecretKey::new(&mut rng());
         let _pkb = skb.public_key();
 
-        let ska = SecretKey::new(&mut OsRng::default());
+        let ska = SecretKey::new(&mut rng());
         let pka = ska.public_key();
 
         let _dh_key = skb.dh_key(pka).unwrap();
@@ -815,7 +817,7 @@ mod tests {
             0x71, 0xe4, 0x95, 0x17, 0x71, 0x98, 0x82, 0x8f, 0xf8, 0x79, 0x94,
         ];
 
-        let skb = SecretKey::new(&mut OsRng::default());
+        let skb = SecretKey::new(&mut rng());
         let _pkb = skb.public_key();
 
         let pka = PublicKey::from_bytes(&bytes);
@@ -826,7 +828,7 @@ mod tests {
     #[test]
     fn nonce() {
         // No fair dice rolls for us!
-        assert_ne!(Nonce::new(&mut OsRng::default()), Nonce::new(&mut OsRng::default()));
+        assert_ne!(Nonce::new(&mut rng()), Nonce::new(&mut rng()));
     }
 
     /// Confirm value generation function ([Vol 3] Part H, Section D.2).

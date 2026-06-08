@@ -25,17 +25,17 @@ targets = ["thumbv7em-none-eabi"]
 aes = { version = "0.8.2", optional = true }
 bt-hci = { version = "0.9", features = ["uuid"] }
 cmac = { version = "0.7.2", optional = true }
-embedded-io = { version = "0.7" }
+embedded-io = { version = "0.7.1" }
 embassy-sync = "0.8"
 embassy-time = "0.5.1"
 embassy-futures = "0.1"
 futures = { version = "0.3", default-features = false }
 heapless = "0.9"
 trouble-host-macros = { path = "../host-macros", version = "0.4.0", optional = true }
-p256 = { version = "0.13.2", default-features = false, features = ["ecdh","arithmetic"], optional = true }
-rand_core = "0.6"
-rand_chacha = { version = "0.3", default-features = false, optional = true }
-rand = { version="0.8", default-features = false, optional = true}
+p256 = { version = "0.14.0-rc.10", default-features = false, features = ["ecdh","arithmetic"], optional = true }
+rand_core = "0.10.1"
+rand_chacha = { version = "0.10.0", default-features = false, optional = true }
+rand = { version="0.10.1", default-features = false, optional = true}
 serde = { version = "1.0.228", optional = true, default-features = false, features = ["derive"] }
 static_cell = "2.1.0"
 zerocopy = "0.8.21"
@@ -55,8 +55,8 @@ embedded-io = { version = "0.7" }
 tokio-serial = "5.4"
 env_logger = "0.11"
 critical-section = { version = "1", features = ["std"] }  # needed for CI builds
-rand = "0.8.5"
-rand_core = { version = "0.6", features = ["getrandom"]}
+rand = { version = "0.10.1" }
+rand_core = { version = "0.10.1", features = []}
 heapless = "0.9"
 embassy-executor = { version = "0.10", features = ["platform-std", "executor-thread"]}
 embassy-time = { version = "0.5.1", features = ["std", "generic-queue-8"] }

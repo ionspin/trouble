@@ -18,7 +18,7 @@ use embassy_time::Duration;
 #[cfg(feature = "security")]
 use heapless::{Vec, VecView};
 #[cfg(feature = "security")]
-use rand_core::{CryptoRng, RngCore};
+use rand_core::{CryptoRng, Rng};
 
 use crate::att::AttErrorCode;
 use crate::channel_manager::ChannelStorage;
@@ -461,6 +461,7 @@ use bt_hci::cmd::le::*;
 use bt_hci::cmd::link_control::*;
 use bt_hci::controller::{ControllerCmdAsync, ControllerCmdSync};
 
+
 /// Trait for security-related controller commands.
 ///
 /// When the `security` feature is enabled, this requires the controller to support
@@ -793,7 +794,7 @@ impl<'stack, C: Controller, P: PacketPool> StackBuilder<'stack, C, P> {
 
     /// Set the random generator seed for random generator used by security manager.
     #[cfg(feature = "security")]
-    pub fn set_random_generator_seed<RNG: RngCore + CryptoRng>(mut self, _random_generator: &mut RNG) -> Self {
+    pub fn set_random_generator_seed<RNG: Rng + CryptoRng>(mut self, _random_generator: &mut RNG) -> Self {
         {
             let mut random_seed = [0u8; 32];
             _random_generator.fill_bytes(&mut random_seed);
